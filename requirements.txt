@@ -1,0 +1,6 @@
+python-frontmatter
+python-dotenv
+pymilvus
+openai
+tqdm
+mcp
