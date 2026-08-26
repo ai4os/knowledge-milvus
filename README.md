@@ -46,7 +46,11 @@ python tests/health.py
 You can run the Model Context Protocol (MCP) server to allow LLMs and MCP clients to query the Milvus vector database:
 
 ```bash
+# Default (stdio transport)
 python mcp_server.py
+
+# Streamable HTTP transport
+python mcp_server.py --transport streamable-http --host 0.0.0.0 --port 3001
 ```
 
 Available tools:

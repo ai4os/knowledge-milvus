@@ -2,6 +2,7 @@
 MCP server to interact with the Milvus database
 """
 
+import argparse
 import os
 from typing import Any
 
@@ -146,4 +147,27 @@ def search(
 
 
 if __name__ == "__main__":
-    mcp.run()
+    parser = argparse.ArgumentParser(description="Milvus MCP Server")
+    parser.add_argument(
+        "--transport",
+        choices=["stdio", "sse", "streamable-http"],
+        default="stdio",
+        help="Transport protocol to use (default: stdio)",
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host to bind for HTTP/SSE transport (default: 127.0.0.1)",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port to bind for HTTP/SSE transport (default: 8000)",
+    )
+    args = parser.parse_args()
+
+    if args.transport == "stdio":
+        mcp.run(transport="stdio")
+    else:
+        mcp.run(transport=args.transport, host=args.host, port=args.port)
