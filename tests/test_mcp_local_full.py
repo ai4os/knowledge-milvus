@@ -1,6 +1,5 @@
 """
-Test script demonstrating how a local MCP client bridges a cloud-hosted LLM
-with a local MCP server over stdio.
+Test full RAG pipeline wth a local MCP server over stdio.
 """
 
 import asyncio

@@ -11,25 +11,25 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-vector_store_id = "ai4eosc_docs"
-milvus_uri = os.getenv("MILVUS_URI")
-milvus_pwd = os.getenv("MILVUS_PWD")
-litellm_key = os.getenv("LITELLM_KEY")
-base_url = "https://vllm.cloud.ai4eosc.eu"
-embedding_model = "AI4EOSC/Qwen/Qwen3-Embedding-4B"
-embedding_model = f"openai/{embedding_model}"
+VECTOR_STORE_ID = "ai4eosc_docs"
+MILVUS_URI = os.environ["MILVUS_URI"]
+MILVUS_PWD = os.environ["MILVUS_PWD"]
+LITELLM_KEY = os.environ["LITELLM_KEY"]
+BASE_URL = "https://vllm.cloud.ai4eosc.eu"
+EMBEDDING_MODEL = "AI4EOSC/Qwen/Qwen3-Embedding-4B"
+EMBEDDING_MODEL = f"openai/{EMBEDDING_MODEL}"
 
-milvus_api_key = f"root:{milvus_pwd}"
+milvus_api_key = f"root:{MILVUS_PWD}"
 embedding_config = {
-    "api_base": f"{base_url}/v1",
-    "api_key": litellm_key,
+    "api_base": f"{BASE_URL}/v1",
+    "api_key": LITELLM_KEY,
 }
 
 litellm_params = {
-    "api_base": milvus_uri,
+    "api_base": MILVUS_URI,
     "api_key": milvus_api_key,
-    "embedding_model": embedding_model,
-    "litellm_embedding_model": embedding_model,
+    "embedding_model": EMBEDDING_MODEL,
+    "litellm_embedding_model": EMBEDDING_MODEL,
     "embedding_config": embedding_config,
     "litellm_embedding_config": embedding_config,
     "milvus_text_field": "text",
@@ -37,19 +37,19 @@ litellm_params = {
 }
 
 payload = {
-    "vector_store_id": vector_store_id,
+    "vector_store_id": VECTOR_STORE_ID,
     "custom_llm_provider": "milvus",
-    "vector_store_name": vector_store_id,
+    "vector_store_name": VECTOR_STORE_ID,
     "litellm_params": litellm_params,
 }
 
 headers = {
-    "Authorization": f"Bearer {litellm_key}",
+    "Authorization": f"Bearer {LITELLM_KEY}",
     "Content-Type": "application/json",
 }
 
 response = requests.post(
-    f"{base_url}/vector_store/new",
+    f"{BASE_URL}/vector_store/new",
     headers=headers,
     json=payload,
 )

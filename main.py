@@ -97,7 +97,10 @@ for collection_pth in SCRAPERS_DOWNLOADS.iterdir():
         )
 
         milvus_client.create_collection(
-            collection_name=collection_name, schema=schema, index_params=index_params
+            collection_name=collection_name,
+            schema=schema,
+            index_params=index_params,
+            properties={"owner": "public"},
         )
 
     # Ensure the collection is loaded into memory before querying

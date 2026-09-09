@@ -4,12 +4,14 @@ MCP server to interact with the Milvus database
 
 import argparse
 import os
-from typing import Any
+from typing import Any, Literal
 
 from dotenv import load_dotenv
-from mcp.server import MCPServer
+from mcp.server.mcpserver import Context, MCPServer
 from openai import OpenAI
 from pymilvus import MilvusClient
+
+from utils import auth
 
 load_dotenv()
 
@@ -46,21 +48,57 @@ def get_embedding(text: str) -> list[float]:
     return response.data[0].embedding
 
 
+def get_user_id(ctx: Context) -> str | None:
+    """Extract user ID from authentication token in Context headers or environment."""
+    headers = {k.lower(): v for k, v in (ctx.headers or {}).items()}
+    user_token = headers.get("x-user-token")
+    if not user_token:
+        return None
+    try:
+        auth_info = auth.get_user_info(user_token)
+        return auth_info.get("id")
+    except Exception:
+        return None
+
+
 @mcp.tool()
-def list_collections() -> list[str]:
+def list_collections(
+    ctx: Context,
+    type: Literal["all", "public", "private"] = "all",
+) -> list[str]:
     """
-    Retrieve all available collections from the Milvus database.
+    Retrieve available collections from the Milvus database.
+
+    Args:
+        type: Collection visibility filter ('all', 'public', or 'private').
 
     Returns:
         List of collection names.
     """
-    return milvus_client.list_collections()
+    user_id = get_user_id(ctx)
+    collections = milvus_client.list_collections()
+
+    filtered_collections: list[str] = []
+    for col in collections:
+        desc = milvus_client.describe_collection(collection_name=col)
+        owner = desc.get("properties", {}).get("owner")
+
+        if type == "public" and owner == "public":
+            filtered_collections.append(col)
+        elif type == "private" and user_id is not None and owner == user_id:
+            filtered_collections.append(col)
+        elif type == "all":
+            if owner == "public" or (user_id is not None and owner == user_id):
+                filtered_collections.append(col)
+
+    return filtered_collections
 
 
 @mcp.tool()
 def search(
     query: str,
     collections: list[str] | str,
+    ctx: Context,
     limit: int = 5,
 ) -> list[dict[str, Any]]:
     """
@@ -83,20 +121,36 @@ def search(
     if not collection_list:
         return []
 
-    # Validate collections against existing collections to avoid hard crashes
-    available_collections = set(milvus_client.list_collections())
-    invalid_collections = [c for c in collection_list if c not in available_collections]
-    if invalid_collections:
-        return [
-            {
-                "error": f"Collection(s) not found: {invalid_collections}. Available collections are: {list(available_collections)}"
-            }
-        ]
+    user_id = get_user_id(ctx)
+    authorized_collections: list[str] = []
+    not_found_collections: list[str] = []
+    unauthorized_collections: list[str] = []
+
+    for col in collection_list:
+        if not milvus_client.has_collection(collection_name=col):
+            not_found_collections.append(col)
+            continue
+
+        desc = milvus_client.describe_collection(collection_name=col)
+        owner = desc.get("properties", {}).get("owner")
+
+        if owner == "public" or (user_id is not None and owner == user_id):
+            authorized_collections.append(col)
+        else:
+            unauthorized_collections.append(col)
+
+    if not_found_collections or unauthorized_collections:
+        errors = []
+        if not_found_collections:
+            errors.append(f"Collection(s) not found: {not_found_collections}")
+        if unauthorized_collections:
+            errors.append(f"Access denied for collection(s): {unauthorized_collections}")
+        return [{"error": "; ".join(errors)}]
 
     embedding = get_embedding(query)
     all_results: list[dict[str, Any]] = []
 
-    for col in collection_list:
+    for col in authorized_collections:
         try:
             search_res = milvus_client.search(
                 collection_name=col,
