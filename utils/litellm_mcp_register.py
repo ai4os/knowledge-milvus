@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-MCP_NAME = "knowledge_milvus_private"
+MCP_NAME = "knowledge_milvus"
 MCP_DESCRIPTION = "MCP server to perform RAG on our Milvus collections "
 MCP_ENDPOINT = "https://mcp-knowledge-milvus-mcp.ifca-deployments.cloud.ai4eosc.eu/mcp"
 
