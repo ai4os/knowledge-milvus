@@ -226,13 +226,13 @@ def main():
         "--set",
         nargs="+",
         metavar="KEY=VALUE",
-        help="Set one or more custom properties (e.g. --set visibility=public owner=user123).",
+        help="Set one or more custom properties (e.g. --set owner=public type=test).",
     )
     parser.add_argument(
         "--drop",
         nargs="+",
         metavar="KEY",
-        help="Drop one or more custom properties by key (e.g. --drop visibility owner).",
+        help="Drop one or more custom properties by key (e.g. --drop owner type).",
     )
 
     args = parser.parse_args()
