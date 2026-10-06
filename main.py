@@ -52,9 +52,6 @@ for collection_pth in SCRAPERS_DOWNLOADS.iterdir():
     # collection name can only contain numbers, letters and underscores
     print(f"📚 Processing collection: {collection_name}")
 
-    if collection_name not in ["imagine", "papi", "github"]:
-        continue
-
     # Load the hashes computed from a previous run
     hash_pth = f"./hashes/{collection_name}.json"
     os.makedirs(os.path.dirname(hash_pth), exist_ok=True)
